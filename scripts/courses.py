@@ -2,7 +2,7 @@
 from pathlib import Path
 import yaml
 
-from lectures import Lectures
+from lectures import Exercises, Lectures
 from config import ROOT, CURRENT_COURSE_ROOT, CURRENT_COURSE_SYMLINK, CURRENT_COURSE_WATCH_FILE
 
 class Course():
@@ -12,12 +12,19 @@ class Course():
 
         self.info = yaml.load((path / 'info.yaml').open())
         self._lectures = None
+        self._exercises = None
 
     @property
     def lectures(self):
         if not self._lectures:
             self._lectures = Lectures(self)
         return self._lectures
+    
+    @property
+    def exercises(self):
+        if not self._exercises:
+            self._exercises = Exercises(self)
+        return self._exercises
 
     def __eq__(self, other):
         if other == None:

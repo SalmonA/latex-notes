@@ -10,25 +10,19 @@ import subprocess
 
 from config import get_week, DATE_FORMAT, CURRENT_COURSE_ROOT
 
-# TODO
-locale.setlocale(locale.LC_TIME, "nl_BE.utf8")
-
-
-def number2filename(n):
-    return 'lec_{0:02d}.tex'.format(n)
+locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
 def filename2number(s):
-    return int(str(s).replace('.tex', '').replace('lec_', ''))
+    return int(str(s).replace('.tex', '').replace('cm_', '').replace('td_',''))
 
 class Lecture():
+
     def __init__(self, file_path, course):
         with file_path.open() as f:
             for line in f:
-                lecture_match = re.search(r'lecture\{(.*?)\}\{(.*?)\}\{(.*)\}', line)
+                lecture_match = re.search(r'seance\{(.*?)\}\{(.*?)\}\{(.*)\}', line)
                 if lecture_match:
                     break;
-
-        # number = int(lecture_match.group(1))
 
         date_str = lecture_match.group(2)
         date = datetime.strptime(date_str, DATE_FORMAT)
@@ -44,25 +38,32 @@ class Lecture():
         self.course = course
 
     def edit(self):
-        subprocess.Popen([
-            "x-terminal-emulator",
-            "-e", "zsh", "-i", "-c",
-            f"\\vim --servername kulak --remote-silent {str(self.file_path)}"
+        subprocess.call([            
+            "urxvt", 
+            "-e",
+            "vim", 
+            str(self.file_path)
         ])
 
     def __str__(self):
-        return f'<Lecture {self.course.info["short"]} {self.number} "{self.title}">'
+        return f'<lecture {self.course.info["short"]} {self.number} "{self.title}">'
+
+
+class Exercise(Lecture):
+
+    def __str__(self):
+        return f'<exercifse {self.course.info["short"]} {self.number} "{self.title}">'
 
 
 class Lectures(list):
     def __init__(self, course):
         self.course = course
-        self.root = course.path
+        self.root = course.path  / 'Cours' 
         self.master_file = self.root / 'master.tex'
         list.__init__(self, self.read_files())
 
     def read_files(self):
-        files = self.root.glob('lec_*.tex')
+        files = self.root.glob('cm_*.tex')
         return sorted((Lecture(f, self.course) for f in files), key=lambda l: l.number)
 
     def parse_lecture_spec(self, string):
@@ -110,7 +111,7 @@ class Lectures(list):
     def update_lectures_in_master(self, r):
         header, footer = self.get_header_footer(self.master_file)
         body = ''.join(
-            ' ' * 4 + r'\input{' + number2filename(number) + '}\n' for number in r)
+            ' ' * 4 + r'\input{' + self.number2filename(number) + '}\n' for number in r)
         self.master_file.write_text(header + body + footer)
 
     def new_lecture(self):
@@ -119,13 +120,13 @@ class Lectures(list):
         else:
             new_lecture_number = 1
 
-        new_lecture_path = self.root / number2filename(new_lecture_number)
+        new_lecture_path = self.root / self.number2filename(new_lecture_number)
 
         today = datetime.today()
         date = today.strftime(DATE_FORMAT)
 
         new_lecture_path.touch()
-        new_lecture_path.write_text(f'\\lecture{{{new_lecture_number}}}{{{date}}}{{}}\n')
+        new_lecture_path.write_text(f'\\seance{{{new_lecture_number}}}{{{date}}}{{}}\n')
 
         if new_lecture_number == 1:
             self.update_lectures_in_master([1])
@@ -147,3 +148,41 @@ class Lectures(list):
             cwd=str(self.root)
         )
         return result.returncode
+
+    def number2filename(self, n):
+        return 'cm_{0:02d}.tex'.format(n)
+
+
+class Exercises(Lectures):
+    def __init__(self, course):
+        self.course = course 
+        self.root = course.path  / 'TD' 
+        self.master_file = self.root / 'master.tex'
+        list.__init__(self, self.read_files())
+
+    @staticmethod
+    def get_header_footer(filepath):
+        part = 0
+        header = ''
+        footer = ''
+        with filepath.open() as f:
+            for line in f:
+                # order of if-statements is important here!
+                if 'end exercises' in line:
+                    part = 2
+
+                if part == 0:
+                    header += line
+                if part == 2:
+                    footer += line
+
+                if 'start exercises' in line:
+                    part = 1
+        return (header, footer)
+
+    def number2filename(self, n):
+        return 'td_{0:02d}.tex'.format(n)
+
+    def read_files(self):
+        files = self.root.glob('td_*.tex')
+        return sorted((Exercise(f, self.course) for f in files), key=lambda l: l.number)
