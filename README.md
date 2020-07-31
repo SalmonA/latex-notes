@@ -1,27 +1,46 @@
 # Managing LaTeX lecture notes
 
-This repository complements my [third blog post about my note taking setup](https://castel.dev/post/lecture-notes-3).
+#### Additions to original repo
 
-#### File structure
+Scripts now handle notes for lectures and exercise sessions for each course.
+
+
+This repository complements this [blog post](https://castel.dev/post/lecture-notes-3).
+
+#### New File structure
 
 ```
 ROOT
-├── riemann-surfaces
+├── linear-algebra
 │   ├── info.yaml
-│   ├── master.tex
-│   ├── lec_01.tex
-│   ├── ...
-│   ├── lec_13.tex
-│   ├── figures
-│   │   ├── analytical-continuation-algebraic-equations.pdf
-│   │   ├── analytical-continuation-algebraic-equations.pdf_tex
-│   │   ├── analytical-continuation-algebraic-equations.svg
+│   ├── cours
+│   │   ├── master.tex
+│   │   ├── cm_01.tex
+│   │   ├── cm_02.tex
 │   │   └── ...
-│   └── UltiSnips
-│       └── tex.snippets
-├── selected-topics
+│   └── td
+│       ├── master.tex
+│       ├── td_01.tex
+│       ├── td_02.tex
+│       └── ...
+├── other-courses
 └── ...
 ```
+
+#### new rofi-lectures.py`
+
+When you run this file, it show you lectures and exercise sessions of the current course.
+Selecting one opens up the file in Vim, pressing `Ctrl+C` creates a new lecture, pressing `Ctrl+T` creates a new exercise session.
+
+![Example of use](https://i.imgur.com/UX43pRx.png)
+
+#### init-all-courses.py
+
+Creates session directories based on config.py and creates `master.tex` files for each course.
+
+
+
+## Original Readme
 
 Contents of `info.yaml`
 ```yaml
@@ -53,14 +72,13 @@ Here `% start lectures` and `% end lectures` are important.
 
 A lecture file contains a line
 ```latex
-\lecture{1}{vr 14 feb 2020 16:04}{Introduction}
+\seance{1}{vr 14 feb 2020 16:04}{Introduction}
 ```
 which is the lecture number, date an title of the lecture. Date format is configurable in `config.py`.
 
 #### `config.py`
 
 This is where you configure what calendar to use for the countdown script, the root folder of the file structure, and similar stuff. You can also configure the date format used in some places (lecture selection dialog and LaTeX files).
-My university uses a system where we label the weeks in a semester from 1 to 13, and this is what the `get_week` function does: it returns the week number of the given date.
 
 #### `courses.py`
 
@@ -121,11 +139,6 @@ It has a method `new_lecture` which creates a new lecture, `update_lectures_in_m
 #### `rofi-courses.py`
 
 When you run this file, it opens rofi allows you to activate a course.
-
-#### `rofi-lectures.py`
-
-When you run this file, it show you lectures of the current course.
-Selecting one opens up the file in Vim, pressing `Ctrl+N` creates a new lecture.
 
 #### `rofi-lectures-view.py`
 
