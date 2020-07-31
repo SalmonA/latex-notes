@@ -8,7 +8,7 @@ import re
 import subprocess
 
 
-from config import get_week, DATE_FORMAT, CURRENT_COURSE_ROOT
+from config import get_week, DATE_FORMAT, CURRENT_COURSE_ROOT, LEC_DIR, EXER_DIR
 
 locale.setlocale(locale.LC_TIME, "fr_FR.utf8")
 
@@ -58,7 +58,7 @@ class Exercise(Lecture):
 class Lectures(list):
     def __init__(self, course):
         self.course = course
-        self.root = course.path  / 'Cours' 
+        self.root = course.path  / LEC_DIR 
         self.master_file = self.root / 'master.tex'
         list.__init__(self, self.read_files())
 
@@ -156,7 +156,7 @@ class Lectures(list):
 class Exercises(Lectures):
     def __init__(self, course):
         self.course = course 
-        self.root = course.path  / 'TD' 
+        self.root = course.path  / EXER_DIR 
         self.master_file = self.root / 'master.tex'
         list.__init__(self, self.read_files())
 
