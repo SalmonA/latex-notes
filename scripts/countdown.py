@@ -59,7 +59,7 @@ def join(*args):
 def truncate(string, length):
     ellipsis = ' ...'
     if len(string) < length:
-        return string
+        return string 
     return string[:length - len(ellipsis)] + ellipsis
 
 def summary(text):
@@ -72,7 +72,7 @@ def formatdd(begin, end):
     minutes = math.ceil((end - begin).seconds / 60)
 
     if minutes == 1:
-        return '1 minuut'
+        return '1 minute'
 
     if minutes < 60:
         return f'{minutes} min'
@@ -81,9 +81,9 @@ def formatdd(begin, end):
     rest_minutes = minutes % 60
 
     if hours > 5 or rest_minutes == 0:
-        return f'{hours} uur'
+        return f'{hours} heures'
 
-    return '{}:{:02d} uur'.format(hours, rest_minutes)
+    return '{}:{:02d} heures'.format(hours, rest_minutes)
 
 def location(text):
     if not text:
@@ -103,7 +103,7 @@ def text(events, now):
         if nxt:
             return join(
                 summary(nxt['summary']),
-                gray('over'),
+                gray('dans'),
                 formatdd(now, nxt['start']),
                 location(nxt['location'])
             )
@@ -111,24 +111,24 @@ def text(events, now):
 
     nxt = next((e for e in events if e['start'] >= current['end']), None)
     if not nxt:
-        return join(gray('Einde over'), formatdd(now, current['end']) + '!')
+        return join(gray('Apéro dans'), formatdd(now, current['end']) + '!')
 
     if current['end'] == nxt['start']:
         return join(
-            gray('Einde over'),
+            gray('Termine dans'),
             formatdd(now, current['end']) + gray('.'),
-            gray('Hierna'),
+            gray('Ensuite,'),
             summary(nxt['summary']),
             location(nxt['location'])
         )
 
     return join(
-        gray('Einde over'),
+        gray('Termine dans'),
         formatdd(now, current['end']) + gray('.'),
-        gray('Hierna'),
+        gray('Ensuite'),
         summary(nxt['summary']),
         location(nxt['location']),
-        gray('na een pauze van'),
+        gray('après une pause de '),
         formatdd(current['end'], nxt['start'])
     )
 
@@ -143,7 +143,7 @@ def activate_course(event):
     if not course:
         return
 
-    courses.current = course
+    #courses.current = course
 
 
 def main():
@@ -153,7 +153,8 @@ def main():
     if 'TZ' in os.environ:
         TZ = pytz.timezone(os.environ['TZ'])
     else:
-        print("Warning: TZ environ variable not set")
+        TZ = pytz.timezone('Europe/Paris')
+        
 
 
     service = authenticate()
@@ -162,7 +163,7 @@ def main():
     # Call the Calendar API
     now = datetime.datetime.now(tz=TZ)
 
-    morning = now.replace(hour=6, minute=0, microsecond=0)
+    morning = now.replace(hour=0, minute=0, microsecond=0)
     evening= now.replace(hour=23, minute=59, microsecond=0)
 
     print('Searching for events')
@@ -188,7 +189,6 @@ def main():
         ]
 
     events = get_events(userCalendarId)
-    # events = get_events('primary') + get_events('school-calendar@import.calendar.google.com')
     print('Done')
 
     DELAY = 60
@@ -198,7 +198,7 @@ def main():
         print(text(events, now))
         if now < evening:
             scheduler.enter(DELAY, 1, print_message)
-
+    
     for event in events:
         # absolute entry, priority 1
         scheduler.enterabs(event['start'].timestamp(), 1, activate_course, argument=(event, ))
@@ -206,7 +206,7 @@ def main():
     # Immediate, priority 1
     scheduler.enter(0, 1, print_message)
     scheduler.run()
-
+    
 
 def wait_for_internet_connection(url, timeout=1):
     while True:
